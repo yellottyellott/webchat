@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd ..
+docker build -t web . && docker run -v "$(pwd)":/src -it web "$@"

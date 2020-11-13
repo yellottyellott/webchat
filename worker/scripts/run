@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd ..
+docker build -t worker . && docker run -v "$(pwd)":/src -it worker "$@"

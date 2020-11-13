@@ -1,0 +1,6 @@
+pynsq
+
+# testing
+pytest
+ipython
+ipdb

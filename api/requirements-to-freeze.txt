@@ -1,0 +1,7 @@
+tornado
+pynsq
+
+# testing
+pytest
+ipython
+ipdb

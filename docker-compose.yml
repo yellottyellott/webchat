@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
+    ports:
+      - "4160"
+      - "4161"
+  nsqd:
+    image: nsqio/nsq
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4150"
+      - "4151"
+
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4171:4171"
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  api:
+    build: ./api
+    command: /src/main.py
+    volumes:
+      - ./api:/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - nsqd
+
+  web:
+    build: ./web
+    command: /src/main.py
+    volumes:
+      - ./web:/src
+    ports:
+      - "8001:8001"
+    depends_on:
+      - api
+
+  worker:
+    build: ./worker
+    command: /src/main.py
+    volumes:
+      - ./worker:/src
+    depends_on:
+      - nsqd
+      - nsqlookupd
+      - api
+
+  archive:
+    image: nsqio/nsq
+    command: /nsq_to_file --topic=messages --output-dir=/data --lookupd-http-address=nsqlookupd:4161
+    depends_on:
+      - nsqlookupd
+      - nsqd
+    volumes:
+      - ./data:/data
